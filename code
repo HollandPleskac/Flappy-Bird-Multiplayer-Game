@@ -1,0 +1,206 @@
+#Pygame
+#Flappy Bird Multiplayer Game
+
+import pygame, random, time
+import os
+from pygame.locals import *
+pygame.init()
+screen = pygame.display.set_mode((600,600))
+pygame.display.set_caption("Flappy Bird Multiplayer Game")
+
+red = (255,0,0)
+blue = (0,0,255)
+green = (0, 255,0)
+purple = (126,0,126)
+black = (0,0,0)
+white = (255,255,255)
+pink = (175, 0, 175)
+orange = (240, 100, 0)
+gray= (100,100,100)
+yellow= (255,255,0)
+aqua= (0,255,255)
+lime = (0,255,0)
+
+def showtext(msg,x,y,color):
+    font= pygame.font.SysFont("freesans" ,25)
+    msgobj = font.render(msg,False,white)
+    screen.blit(msgobj,(x,y))
+
+def flappyBird(bird):
+
+    red = (255,0,0)
+    blue = (0,0,255)
+    green = (0, 255,0)
+    purple = (126,0,126)
+    black = (0,0,0)
+    white = (255,255,255)
+    pink = (175, 0, 175)
+    orange = (240, 100, 0)
+    gray= (100,100,100)
+    yellow= (255,255,0)
+    aqua= (0,255,255)
+    lime = (0,255,0)
+
+
+    birdx = 300
+    birdy = 300
+
+    #speedx = 1
+    speedy = 1
+
+    pipex = 500
+    pipe1y = 400
+    pipe2y = 0
+
+    p2w = 200
+
+    pipe_speedx = 1
+
+    score = 0
+
+    fpsclock = pygame.time.Clock()
+
+    bird = pygame.transform.scale(bird, (60, 60))
+
+    background = pygame.image.load('/home/pi/flappy_bird_background.png')
+    background = pygame.transform.scale(background, (800,600))
+
+    def showtext(msg,x,y,color):
+        font = pygame.font.SysFont("freesans", 32)
+        msgobj = font.render(msg,False,white)
+        screen.blit(msgobj,(x,y))
+
+    showtext("Score: 0",100,50,white)
+
+    while True:
+
+        screen.blit(background,(0,0))
+        screen.blit(bird, (birdx,birdy))
+        #pygame.draw.circle(screen,yellow,(birdx,birdy),30,0)
+        
+        pygame.draw.rect(screen,pink,(pipex,p2w+150,100,600),0) #pipe1-bottom
+        pygame.draw.rect(screen,pink,(pipex,pipe2y,100,p2w),0) #pipe2-top
+        showtext("Score: {}".format(score),100,50,white)
+        pygame.display.update()
+        fpsclock.tick(84)
+        
+
+        
+        birdy = birdy+speedy
+
+        pipex = pipex+pipe_speedx
+        
+        pipe_speedx = -1
+
+        if pipex <= 0:
+            p2w = random.randint(0,400)
+            pipex = 600
+
+            
+        #pipe collision
+
+        if birdx+60 in range(pipex,pipex+100) and birdy+60 in range(p2w+150,p2w+750):
+            
+            print('bottom pipe collision')
+            showtext("Game Over!",200,20,white)
+            pygame.display.update()
+            break
+            
+            
+
+        if birdx+60 in range(pipex,pipex+100) and birdy in range(pipe2y,p2w):
+            
+            print('top pipe collision')
+            showtext("Game Over!",200,20,white)
+            pygame.display.update()
+            break
+            
+
+        #top & bottom collision
+
+        if birdy+60 >= 600:
+            
+            print('bottom screen collision')
+            showtext("Game Over!",200,20,white)
+            pygame.display.update()
+            break
+           
+            
+        if birdy <= 0:
+            
+            print('top screen collision')
+            showtext("Game Over!",200,20,white)
+            pygame.display.update()
+            break
+            
+
+        if birdx+60 == pipex+100 and birdy in range(p2w, p2w+150):
+            print('bird is between pipes')
+            score = score+1
+
+
+        if score == 10:
+            showtext("You Win!",100,50,white)
+            time.sleep(4)
+            break
+
+        
+             
+        for event in pygame.event.get():
+             
+            if event.type == QUIT:
+                pygame.quit()
+                exit()
+
+            elif event.type == KEYDOWN:
+                
+                if event.key == K_SPACE:
+                    
+                     speedy = -1 
+                     pygame.display.update()
+                     screen.fill(black)
+
+            elif event.type == KEYUP:
+                if event.key == K_SPACE:
+                    speedy = 1
+def Menu() :
+    bob= pygame.image.load('/home/pi/bidr2.png')
+    joe = pygame.image.load('/home/pi/bird_option#2.png')
+    while True:
+        pygame.draw.rect(screen,red,(50,100,200,100),0)
+        pygame.draw.rect(screen,orange,(400,100,200,100),0)
+        
+        showtext("Bob",100,140,white)
+        showtext("Joe",420,140,white)
+
+        screen.blit(pygame.transform.scale(bob, (60, 60)),(160,130))
+        screen.blit(pygame.transform.scale(joe, (60, 60)),(480,130))
+        
+        pygame.display.update()
+        for event in pygame.event.get():
+             
+            if event.type == QUIT:
+
+                pygame.quit()
+                exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                print('left mouse at',event.pos)
+                x, y = event.pos
+
+                #red box
+                if x in range(50,250) and y in range(100,200):
+                    print("red clicked")
+                    flappyBird(bob)
+                    screen.fill(black)
+                    pygame.display.update()
+
+                #orange box
+                if x in range(400,600) and y in range(100,200):
+                    print("orange clicked")
+                    flappyBird(joe)
+                    screen.fill(black)
+                    pygame.display.update()
+
+Menu()
+
+
