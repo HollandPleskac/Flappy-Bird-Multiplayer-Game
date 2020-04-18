@@ -1,0 +1,185 @@
+#Pygame
+#Flappy Bird Multiplayer Game
+
+import pygame, random, time, socket
+import os
+from pygame.locals import *
+
+pygame.init()
+screen = pygame.display.set_mode((600,600))
+pygame.display.set_caption("Flappy Bird Multiplayer Game")
+
+########################
+host = ''
+port = 1234
+client = (host,port)
+
+server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server.bind(client)
+
+print("Socket binded to", port)
+
+backlog = 1
+server.listen(backlog)
+#########################
+
+
+bird = pygame.image.load('/home/pi/bidr2.png')
+
+red = (255,0,0)
+blue = (0,0,255)
+green = (0, 255,0)
+white= (255,255,255)
+pink = (175, 0, 175)
+black = (0,0,0)
+
+birdx = 300
+birdy = 300
+
+#speedx = 1
+speedy = 3
+
+pipex = 500
+pipe1y = 400
+pipe2y = 0
+
+p2w = 200
+
+pipe_speedx = 3
+
+score = 0
+
+fpsclock = pygame.time.Clock()
+
+bird = pygame.transform.scale(bird, (60, 60))
+
+background = pygame.image.load('/home/pi/flappy_bird_background.png')
+background = pygame.transform.scale(background, (800,600))
+
+def showtext(msg,x,y,color):
+    font = pygame.font.SysFont("freesans", 32)
+    msgobj = font.render(msg,False,white)
+    screen.blit(msgobj,(x,y))
+
+#showtext("Player 1: 0",100,50,white)
+
+while True:
+
+
+    print(server.getsockname()[0],"is waiting for connection")
+    connection,address = server.accept()
+    
+    print("Socket is listening")
+    print("Got connection from", address)
+    
+    connection.sendall(bytes("{} {} {} {} {}".format(birdx,birdy, pipex, p2w, pipe2y),"utf-8"))
+    
+    data = connection.recv(1024).decode('utf-8')
+    
+    while True:
+        if data:
+            print("Received from client address: ", address)
+            x,y = repr(data).split()
+            x=int(x.replace('\'',""))
+            y=int(y.replace('\'',""))
+            
+            data = None
+        else:
+            print("No more data.")
+            break
+        
+    connection.close()
+    print("Connection closed")
+
+
+    
+    screen.blit(background,(0,0))
+    screen.blit(bird, (birdx,birdy))
+    screen.blit(bird, (x-70,y))
+    #pygame.draw.circle(screen,yellow,(birdx,birdy),30,0)
+    
+    pygame.draw.rect(screen,pink,(pipex,p2w+150,100,600),0) #pipe1-bottom
+    pygame.draw.rect(screen,pink,(pipex,pipe2y,100,p2w),0) #pipe2-top
+    #showtext("Player 1: {}".format(score),100,50,white)
+    pygame.display.update()
+    fpsclock.tick(84)
+    
+
+    
+    birdy = birdy+speedy
+
+    pipex = pipex+pipe_speedx
+    
+    pipe_speedx = -3
+
+    if pipex <= 0:
+        p2w = random.randint(0,400)
+        pipex = 600
+
+        
+    #pipe collision
+
+    if birdx+60 in range(pipex,pipex+100) and birdy+60 in range(p2w+150,p2w+750):
+        
+        print('bottom pipe collision')
+        showtext("Game Over!",200,20,white)
+        pygame.display.update()
+        break
+        
+        
+
+    if birdx+60 in range(pipex,pipex+100) and birdy in range(pipe2y,p2w):
+        
+        print('top pipe collision')
+        showtext("Game Over!",200,20,white)
+        pygame.display.update()
+        break
+        
+
+    #top & bottom collision
+
+    if birdy+60 >= 600:
+        
+        print('bottom screen collision')
+        showtext("Game Over!",200,20,white)
+        pygame.display.update()
+        break
+       
+        
+    if birdy <= 0:
+        
+        print('top screen collision')
+        showtext("Game Over!",200,20,white)
+        pygame.display.update()
+        break
+        
+
+    #if birdx+60 == pipex+100 and birdy in range(p2w, p2w+150):
+        #print('bird is between pipes')
+        #score = score+1
+
+
+    if score == 10:
+        showtext("You Win!",100,50,white)
+        time.sleep(4)
+        break
+
+    
+         
+    for event in pygame.event.get():
+         
+        if event.type == QUIT:
+            pygame.quit()
+            exit()
+
+        elif event.type == KEYDOWN:
+            
+            if event.key == K_SPACE:
+                
+                 speedy = -3
+                 pygame.display.update()
+                 screen.fill(black)
+
+        elif event.type == KEYUP:
+            if event.key == K_SPACE:
+                speedy = 3
